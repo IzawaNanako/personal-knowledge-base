@@ -4,7 +4,7 @@
   "description": "A very simple personal knowledge base using Gemini API.",
   "main": "index.js",
   "scripts": {
-    "ask": "tsx src/query.ts",
+    "query": "tsx src/query.ts",
     "ingest": "tsx src/ingest.ts"
   },
   "repository": {
