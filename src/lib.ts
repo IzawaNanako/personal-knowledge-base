@@ -102,32 +102,28 @@ export async function checkNeedForSearch(prompt: string): Promise<string | null>
 }
 
 export async function searchTavily(query: string): Promise<{url: string, title: string, content: string}[]> {
-    console.log(`[Tavily] Scraping the web for: "${query}"...`);
     const response = await fetch('https://api.tavily.com/search', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
             api_key: process.env.TAVILY_API_KEY,
             query: query,
-            include_answer: false,
             search_depth: "advanced",
         })
     });
     
     const data = await response.json();
-    const results: PromiseLike<{ url: string; title: string; content: string; }[]> | { url: any; title: any; content: any; }[] = [];
-    
-    if (data.results) {
-        data.results.forEach((r: any) => {
-            results.push({
-                url: r.url,
-                title: r.title,
-                content: r.content,
-            });
-        });
+    if (!data.results) {
+        return [];
     }
-    
-    return results;
+
+    return data.results.map((r: any) => ({
+        url: r.url,
+        title: r.title,
+        content: r.content,
+    }));
 }
 
 export async function askGeminiForWikiOperations(prompt: string): Promise<any[]> {
