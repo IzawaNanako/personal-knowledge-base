@@ -10,5 +10,5 @@
 - Put your api key in a .env file from root
 - Put raw input files into /raw
 - Run "npm run ingest"
-- Run "npm query *question here*"
+- Run "npm run query *question here*"
 - Response will be in output/
