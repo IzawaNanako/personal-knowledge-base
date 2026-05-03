@@ -142,8 +142,8 @@ async function processQuery(question: string, hasSearched = false) {
                     const targetPath = path.join(WIKI_DIR, op.filename);
                     const fileExists = await fs.pathExists(targetPath);
 
-                    const footerLinks = op.sources.map((s: string) => s.trim()).join(', ');
-                    const sourceFooter = `\n\n> **Sources:** ${footerLinks} (Web Archive)`;
+                    const footerLinks = op.sources.map((s: string) => `\n- ${s.trim()}`).join('');
+                    const sourceFooter = `\n\n### Sources${footerLinks}\n(Web Archive)`;
 
                     if (fileExists || op.action === 'update') {
                         const timestamp = new Date().toISOString();

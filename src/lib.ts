@@ -208,7 +208,7 @@ export async function askGeminiForQuery(prompt: string): Promise<{slug: string, 
             contents: prompt,
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.2,
+                temperature: 0.3,
                 responseMimeType: 'application/json',
                 responseSchema: querySchema,
             }
