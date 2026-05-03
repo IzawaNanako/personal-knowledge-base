@@ -2,6 +2,7 @@ output
 raw
 wiki
 archive
+workspace.json*
 
 # Logs
 logs

@@ -6,6 +6,25 @@ import { askGeminiForQuery, logOperation, getEmbedding, checkNeedForSearch, sear
 const WIKI_DIR = path.join(process.cwd(), 'wiki');
 const OUTPUT_DIR = path.join(process.cwd(), 'output');
 
+function cleanUrl(rawUrl: string): string {
+    try {
+        const url = new URL(rawUrl);
+        
+        const trackingParams = [
+            'srsltid', 'gclid', 'fbclid', 'igshid', 'twclid', 'msclkid',
+            'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+            'mc_cid', 'mc_eid', '_bta_tid', '_bta_c'
+        ];
+
+        trackingParams.forEach(param => url.searchParams.delete(param));
+
+        return url.toString();
+    }
+    catch (e) {
+        return rawUrl; 
+    }
+}
+
 function cosineSimilarity(vecA: number[], vecB: number[]) {
     let dotProduct = 0, normA = 0, normB = 0;
     for (let i = 0; i < vecA.length; i++) {
@@ -59,8 +78,11 @@ async function processQuery(question: string, hasSearched = false) {
 
     if (!hasSearched) {
         const routerPrompt = `
+        Evaluate the current user query against the provided local context and Master Index. 
+        Determine if a 'search_web' tool call is required based on your "Query" operating rules.
+
         User Query: ${question}
-        
+
         <MasterIndex>
         ${indexContent}
         </MasterIndex>
@@ -68,20 +90,29 @@ async function processQuery(question: string, hasSearched = false) {
         <RelevantDeepContext>
         ${contextWindow}
         </RelevantDeepContext>
-        
-        Does the local context contain enough information to fully answer the query? 
-        If yes, just reply normally. If no, call the search_web tool to find the missing data.
         `;
         
         const searchNeeded = await checkNeedForSearch(routerPrompt);
 
         if (searchNeeded) {
             console.log(`\n🧠 AI decided local context is insufficient. Initiating Web Search...`);
-            const webResults = await searchTavily(searchNeeded);
+            const webResultsRaw = await searchTavily(searchNeeded);
+            const uniqueResults = new Map();
+            for (const page of webResultsRaw) {
+                const cleanAndSafeUrl = cleanUrl(page.url);
+                
+                if (!uniqueResults.has(cleanAndSafeUrl)) {
+                    uniqueResults.set(cleanAndSafeUrl, {
+                        ...page,
+                        url: cleanAndSafeUrl,
+                    });
+                }
+            }
+            const webResults = Array.from(uniqueResults.values());
             const ARCHIVE_DIR = path.join(process.cwd(), 'archive');
             await fs.ensureDir(ARCHIVE_DIR);
             
-            console.log(`\n📚 Archiving and Ingesting new web knowledge...`);
+            console.log(`\nArchiving and Ingesting new web knowledge...`);
             
             for (const page of webResults) {
                 const safeFilename = sanitizeUrlToFilename(page.url);
@@ -92,8 +123,12 @@ async function processQuery(question: string, hasSearched = false) {
                 console.log(`-> [ARCHIVED] Saved raw web data to ${safeFilename}`);
 
                 const ingestPrompt = `
-                Please ingest this raw web content. Extract key concepts and return the structured JSON operations.
-                <RawContent>\n${rawContentToSave}\n</RawContent>
+                Process the following raw content according to the "Ingest" rules in your Operating Manual.
+                Ensure you return the JSON operations for any new or updated wiki pages.
+
+                <RawContent>
+                ${rawContentToSave}
+                </RawContent>
                 `;
                 
                 const operations = await askGeminiForWikiOperations(ingestPrompt);
@@ -128,10 +163,11 @@ async function processQuery(question: string, hasSearched = false) {
 
     console.log(`\nSynthesizing final answer...`);
     const finalPrompt = `
-    Answer the user's query based ONLY on the provided Wiki content.
-    Include citations formatted as [[wikilinks]].
-    CRITICAL: Do NOT write a "Sources" section in the answer text. Instead, extract all Web URLs and [[Archive-Links]] from the context and put them strictly into the 'sources' JSON array.
-    
+    Synthesize the final answer for the user based on the provided context. 
+    Remember to populate the 'sources' array with relevant [[Archive-Links]] as per your Operating Manual.
+
+    <UserQuery>${question}</UserQuery>
+
     <MasterIndex>
     ${indexContent}
     </MasterIndex>
@@ -139,8 +175,6 @@ async function processQuery(question: string, hasSearched = false) {
     <RelevantDeepContext>
     ${contextWindow}
     </RelevantDeepContext>
-    
-    <UserQuery>${question}</UserQuery>
     `;
 
     try {

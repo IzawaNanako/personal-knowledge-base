@@ -15,7 +15,7 @@ const LOG_PATH = path.join(process.cwd(), 'logs', 'log.md');
 
 const wikiOperationSchema: Schema = {
     type: Type.ARRAY,
-    description: "A list of wiki files to create or update.",
+    description: "A list of wiki files to create or update. Prefer creating ONE comprehensive markdown file per broad topic. Do NOT fragment related concepts into multiple small files. Group them together under markdown headers.",
     items: {
         type: Type.OBJECT,
         properties: {
@@ -82,7 +82,9 @@ export async function checkNeedForSearch(prompt: string): Promise<string | null>
             contents: prompt,
             config: {
                 systemInstruction: systemInstruction,
-                tools: [{ functionDeclarations: [searchWebDeclaration] }],
+                tools: [{
+                    functionDeclarations: [searchWebDeclaration],
+                }],
                 temperature: 0.1,
             }
         });
