@@ -95,7 +95,7 @@ async function processQuery(question: string, hasSearched = false) {
         const searchNeeded = await checkNeedForSearch(routerPrompt);
 
         if (searchNeeded) {
-            console.log(`\n🧠 AI decided local context is insufficient. Initiating Web Search...`);
+            console.log(`\nAI decided local context is insufficient. Initiating Web Search...`);
             const webResultsRaw = await searchTavily(searchNeeded);
             const uniqueResults = new Map();
             for (const page of webResultsRaw) {
