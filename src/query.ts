@@ -113,45 +113,51 @@ async function processQuery(question: string, hasSearched = false) {
             await fs.ensureDir(ARCHIVE_DIR);
             
             console.log(`\nArchiving and Ingesting new web knowledge...`);
-            
+
             for (const page of webResults) {
                 const safeFilename = sanitizeUrlToFilename(page.url);
-                const archivePath = path.join(ARCHIVE_DIR, safeFilename);
-                
+                const archivePath = path.join(process.cwd(), 'archive', safeFilename);
                 const rawContentToSave = `# ${page.title}\n**Original URL:** ${page.url}\n\n${page.content}`;
                 await fs.writeFile(archivePath, rawContentToSave, 'utf8');
-                console.log(`-> [ARCHIVED] Saved raw web data to ${safeFilename}`);
+                console.log(`-> [ARCHIVED] ${safeFilename}`);
+            }
 
-                const ingestPrompt = `
-                Process the following raw content according to the "Ingest" rules in your Operating Manual.
-                Ensure you return the JSON operations for any new or updated wiki pages.
+            const batchFeed = webResults.map(p => 
+                `Source: [[${sanitizeUrlToFilename(p.url)}]]\nContent: ${p.content}`
+            ).join('\n\n---\n\n');
 
-                <RawContent>
-                ${rawContentToSave}
-                </RawContent>
-                `;
-                
-                const operations = await askGeminiForWikiOperations(ingestPrompt);
-                
-                if (operations && operations.length > 0) {
-                    for (const op of operations) {
-                        const targetPath = path.join(WIKI_DIR, op.filename);
-                        const fileExists = await fs.pathExists(targetPath);
+            const batchPrompt = `
+            Please ingest the following web research results. 
+            Extract key concepts and return the structured JSON operations to update the wiki.
+
+            <ResearchFeed>
+            ${batchFeed}
+            </ResearchFeed>
+            `;
+
+            const operations = await askGeminiForWikiOperations(batchPrompt);
+
+            if (operations && operations.length > 0) {
+                for (const op of operations) {
+                    const targetPath = path.join(WIKI_DIR, op.filename);
+                    const fileExists = await fs.pathExists(targetPath);
+
+                    const footerLinks = op.sources.map((s: string) => s.trim()).join(', ');
+                    const sourceFooter = `\n\n> **Sources:** ${footerLinks} (Web Archive)`;
+
+                    if (fileExists || op.action === 'update') {
+                        const timestamp = new Date().toISOString();
+                        const appendContent = `\n\n## Web Context (${timestamp})\n${op.content}${sourceFooter}`;
+                        await fs.appendFile(targetPath, appendContent, 'utf8');
+                        console.log(`   -> [WEB-APPENDED] ${op.filename}`);
+                    } 
+                    else {
+                        await fs.writeFile(targetPath, op.content + sourceFooter, 'utf8');
+                        console.log(`   -> [WEB-CREATED] ${op.filename}`);
+                        
                         const indexPath = path.join(WIKI_DIR, 'index.md');
-
-                        const sourceFooter = `\n\n> **Source:** [[${safeFilename}]] (Web Archive) - ${page.url}`;
-
-                        if (fileExists || op.action === 'update') {
-                            await fs.appendFile(targetPath, `\n\n## Web Context (${new Date().toISOString()})\n${op.content}${sourceFooter}`, 'utf8');
-                            console.log(`   -> [WEB-APPENDED] ${op.filename}`);
-                        }
-                        else {
-                            await fs.writeFile(targetPath, op.content + sourceFooter, 'utf8');
-                            console.log(`   -> [WEB-CREATED] ${op.filename}`);
-                            
-                            const indexEntry = `- [[${op.filename.replace('.md', '')}]] : ${op.summary}\n`;
-                            await fs.appendFile(indexPath, indexEntry, 'utf8');
-                        }
+                        const indexEntry = `- [[${op.filename.replace('.md', '')}]] : ${op.summary}\n`;
+                        await fs.appendFile(indexPath, indexEntry, 'utf8');
                     }
                 }
             }

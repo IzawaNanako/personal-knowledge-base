@@ -34,9 +34,16 @@ const wikiOperationSchema: Schema = {
             summary: {
                 type: Type.STRING,
                 description: "A one-line summary of the file for the Master Index.",
+            },
+            sources: {
+                type: Type.ARRAY,
+                description: "List of [[archive-links]] used for this specific content.",
+                items: {
+                    type: Type.STRING,
+                }
             }
         },
-        required: ["filename", "content", "action", "summary"]
+        required: ["filename", "content", "action", "summary", "sources"]
     }
 };
 
