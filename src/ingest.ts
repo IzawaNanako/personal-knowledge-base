@@ -27,12 +27,12 @@ async function ingestFiles() {
         const rawContent = await fs.readFile(rawPath, 'utf8');
         
         const prompt = `
-Please ingest the following raw content.
-Extract key concepts and return the structured JSON operations to update the wiki.
+        Please ingest the following raw content.
+        Extract key concepts and return the structured JSON operations to update the wiki.
 
-<RawContent>
-${rawContent}
-</RawContent>
+        <RawContent>
+        ${rawContent}
+        </RawContent>
         `;
 
         const operations = await askGeminiForWikiOperations(prompt);
@@ -45,15 +45,22 @@ ${rawContent}
         for (const op of operations) {
             const targetPath = path.join(WIKI_DIR, op.filename);
             const fileExists = await fs.pathExists(targetPath);
+            const indexPath = path.join(WIKI_DIR, 'index.md');
+
+            const sourceFooter = `\n\n> **Source:** [[${file}]] (Archived)`;
 
             if (fileExists || op.action === 'update') {
-                const appendContent = `\n\n## Additional Context\n${op.content}`;
+                const appendContent = `\n\n## Additional Context\n${op.content}${sourceFooter}`;
                 await fs.appendFile(targetPath, appendContent, 'utf8');
                 console.log(`-> [APPENDED] ${op.filename}`);
             }
             else {
-                await fs.writeFile(targetPath, op.content, 'utf8');
+                await fs.writeFile(targetPath, op.content + sourceFooter, 'utf8');
                 console.log(`-> [CREATED] ${op.filename}`);
+                
+                const indexEntry = `- [[${op.filename.replace('.md', '')}]] : ${op.summary}\n`;
+                await fs.appendFile(indexPath, indexEntry, 'utf8');
+                console.log(`-> [INDEXED] Added to Master Index`);
             }
         }
         

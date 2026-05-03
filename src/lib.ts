@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { GoogleGenAI, Type, Schema, FunctionDeclaration } from '@google/genai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import 'dotenv/config';
@@ -15,24 +15,28 @@ const LOG_PATH = path.join(process.cwd(), 'logs', 'log.md');
 
 const wikiOperationSchema: Schema = {
     type: Type.ARRAY,
-    description: 'A list of wiki files to create or update based on the raw content.',
+    description: "A list of wiki files to create or update.",
     items: {
         type: Type.OBJECT,
         properties: {
             filename: {
                 type: Type.STRING,
-                description: 'The kebab-case.md filename.',
+                description: "The kebab-case.md filename.",
             },
             content: {
                 type: Type.STRING,
-                description: 'The markdown content to write to the file.',
+                description: "The markdown content.",
             },
             action: {
                 type: Type.STRING,
-                description: '"create" if new, "update" if appending/modifying.',
+                description: "'create' if new, 'update' if appending.",
+            },
+            summary: {
+                type: Type.STRING,
+                description: "A one-line summary of the file for the Master Index.",
             }
         },
-        required: ['filename', 'content', 'action']
+        required: ["filename", "content", "action", "summary"]
     }
 };
 
@@ -41,6 +45,87 @@ async function getSystemInstruction(): Promise<string> {
          throw new Error('system.md not found! Please create the rulebook.');
     }
     return fs.readFile(SYSTEM_PROMPT_PATH, 'utf8');
+}
+
+export const webSearchTool: FunctionDeclaration = {
+    name: 'search_web',
+    description: 'Search the internet for information if the local wiki context is insufficient or outdated.',
+    parameters: {
+        type: Type.OBJECT,
+        properties: {
+            searchQuery: { 
+                type: Type.STRING, 
+                description: 'The optimized search query to find the missing information.' ,
+            }
+        },
+        required: ['searchQuery']
+    }
+};
+
+const searchWebDeclaration: FunctionDeclaration = {
+    name: 'search_web',
+    description: 'Search the internet for information if the local wiki context is insufficient or outdated.',
+    parameters: {
+        type: Type.OBJECT,
+        properties: {
+            searchQuery: { type: Type.STRING, description: 'The optimized search query to find the missing information.' }
+        },
+        required: ['searchQuery']
+    }
+};
+
+export async function checkNeedForSearch(prompt: string): Promise<string | null> {
+    const systemInstruction = await getSystemInstruction();
+    try {
+        const response = await ai.models.generateContent({
+            model: MODEL_NAME,
+            contents: prompt,
+            config: {
+                systemInstruction: systemInstruction,
+                tools: [{ functionDeclarations: [searchWebDeclaration] }],
+                temperature: 0.1,
+            }
+        });
+        
+        if (response.functionCalls && response.functionCalls.length > 0) {
+            // @ts-ignore
+            return response.functionCalls[0].args.searchQuery as string;
+        }
+        return null;
+    }
+    catch (error) {
+        console.error('Agent Router Error:', error);
+        return null;
+    }
+}
+
+export async function searchTavily(query: string): Promise<{url: string, title: string, content: string}[]> {
+    console.log(`[Tavily] Scraping the web for: "${query}"...`);
+    const response = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            api_key: process.env.TAVILY_API_KEY,
+            query: query,
+            include_answer: false,
+            search_depth: "advanced",
+        })
+    });
+    
+    const data = await response.json();
+    const results: PromiseLike<{ url: string; title: string; content: string; }[]> | { url: any; title: any; content: any; }[] = [];
+    
+    if (data.results) {
+        data.results.forEach((r: any) => {
+            results.push({
+                url: r.url,
+                title: r.title,
+                content: r.content,
+            });
+        });
+    }
+    
+    return results;
 }
 
 export async function askGeminiForWikiOperations(prompt: string): Promise<any[]> {
@@ -93,18 +178,24 @@ const querySchema: Schema = {
     properties: {
         slug: {
             type: Type.STRING,
-            description: "A 3-4 word kebab-case summary of the query for the filename. e.g., okumura-hata-frequency",
-
+            description: "A 3-4 word kebab-case summary of the query."
         },
         answer: {
             type: Type.STRING,
-            description: "The synthesized markdown answer containing [[wikilinks]].",
+            description: "The synthesized markdown answer. Do NOT include a sources section here.",
+        },
+        sources: { 
+            type: Type.ARRAY, 
+            description: "A list of exact source URLs or [[archive-links]] found in the context.",
+            items: {
+                type: Type.STRING,
+            } 
         }
     },
-    required: ["slug", "answer"]
+    required: ["slug", "answer", "sources"]
 };
 
-export async function askGeminiForQuery(prompt: string): Promise<{slug: string, answer: string} | null> {
+export async function askGeminiForQuery(prompt: string): Promise<{slug: string, answer: string, sources: string[]} | null> {
     const systemInstruction = await getSystemInstruction();
     try {
         const response = await ai.models.generateContent({
@@ -113,14 +204,14 @@ export async function askGeminiForQuery(prompt: string): Promise<{slug: string, 
             config: {
                 systemInstruction: systemInstruction,
                 temperature: 0.2,
-                responseMimeType: "application/json",
+                responseMimeType: 'application/json',
                 responseSchema: querySchema,
             }
         });
         return JSON.parse(response.text || 'null');
     }
     catch (error) {
-        console.error("Gemini API Error:", error);
+        console.error('Gemini API Error:', error);
         return null;
     }
 }
