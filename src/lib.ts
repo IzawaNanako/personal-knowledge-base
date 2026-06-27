@@ -75,7 +75,10 @@ const searchWebDeclaration: FunctionDeclaration = {
     parameters: {
         type: Type.OBJECT,
         properties: {
-            searchQuery: { type: Type.STRING, description: 'The optimized search query to find the missing information.' }
+            searchQuery: {
+                type: Type.STRING,
+                description: 'The optimized search query to find the missing information.',
+            }
         },
         required: ['searchQuery']
     }
