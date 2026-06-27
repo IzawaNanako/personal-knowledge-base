@@ -12,9 +12,9 @@
     "url": "git+https://github.com/IzawaNanako/personal-knowledge-base.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Wither (https://github.com/IzawaNanako)",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/IzawaNanako/personal-knowledge-base/issues"
   },
