@@ -1,24 +1,23 @@
 {
   "name": "personal-knowledge-base",
   "version": "1.0.0",
-  "description": "A very simple personal knowledge base using Gemini API.",
-  "main": "index.js",
-  "scripts": {
-    "query": "tsx src/query.ts",
-    "ingest": "tsx src/ingest.ts"
+  "description": "A simple AI-driven knowledge management system using Gemini API.",
+  "keywords": [],
+  "homepage": "https://github.com/IzawaNanako/personal-knowledge-base#readme",
+  "bugs": {
+    "url": "https://github.com/IzawaNanako/personal-knowledge-base/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IzawaNanako/personal-knowledge-base.git"
   },
-  "keywords": [],
+  "license": "GPL-3.0-only",
   "author": "Wither (https://github.com/IzawaNanako)",
-  "license": "ISC",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/IzawaNanako/personal-knowledge-base/issues"
+  "scripts": {
+    "ingest": "tsx src/ingest.ts",
+    "query": "tsx src/query.ts"
   },
-  "homepage": "https://github.com/IzawaNanako/personal-knowledge-base#readme",
   "dependencies": {
     "@google/genai": "^1.51.0",
     "dotenv": "^17.4.2",
