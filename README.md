@@ -12,7 +12,7 @@ The repository acts as a self-contained Obsidian vault with specific directories
 * **`/wiki/index.md`**: The Master Index. A lightweight table of contents containing one-line summaries of every synthesized concept.
 * **`/output`**: The destination directory for synthesized answers when the user queries the knowledge base.
 
-*Note: The included `.obsidian` configuration automatically hides operational files to ensure a clean, distraction-free reading experience focused strictly on your knowledge directories.*
+*The included `.obsidian` configuration automatically hides operational files to ensure a clean, distraction-free reading experience focused strictly on your knowledge directories.*
 
 ## Core Operations
 
@@ -28,28 +28,28 @@ When queried, the system acts as an Agent Router. It evaluates existing local da
 
 The system can perform health checks on the wiki, scanning for broken or orphan links, identifying frequently mentioned concepts that lack dedicated pages, and detecting contradictory statements across different files.
 
-## Prerequisites
+## Getting Started
+
+### Prerequisites
 
 * [Node.js](https://nodejs.org/) (v16.x or higher)
 * [Obsidian](https://obsidian.md/)
 * A [Gemini API Key](https://aistudio.google.com/)
 * A [Tavily API Key](https://tavily.com/)
 
-## Installation & Setup
+### Installation
 
 1. **Clone the repository:**
 
     ```bash
-    git clone [https://github.com/IzawaNanako/personal-knowledge-base.git](https://github.com/IzawaNanako/personal-knowledge-base.git)
+    git clone https://github.com/IzawaNanako/personal-knowledge-base.git
     cd personal-knowledge-base
-
     ```
 
 2. **Install Dependencies:**
 
     ```bash
     npm install
-
     ```
 
 3. **Configure Environment Variables:**
@@ -57,7 +57,6 @@ Rename the `.env.example` file to `.env` and populate it with your API credentia
 
     ```bash
     cp .env.example .env
-
     ```
 
     | Variable | Description | Required |
@@ -73,33 +72,34 @@ Rename the `.env.example` file to `.env` and populate it with your API credentia
 * Trust the workspace when prompted to ensure the pre-configured community plugins load correctly.
 * The custom Terminal plugin will be available directly within Obsidian to execute your AI commands.
 
-## Usage
+### Usage
 
 Interact with the knowledge base using the terminal plugin inside Obsidian (or your standard system terminal).
 
-### Ingesting Documents
+#### Ingesting Documents
 
 Place your raw text or Markdown files into the `/raw` directory, then run the ingest command. The system will process all files in the directory, synthesize the data into the `/wiki`, and move the originals to the `/archive`.
 
 ```bash
 npm run ingest
-
 ```
 
-### Querying the Knowledge Base
+#### Querying the Knowledge Base
 
 Ask a question or request a synthesis. The AI will search the wiki, perform web research if necessary, and generate a highly detailed, cited response in the `/output` folder.
 
 ```bash
 npm run query Your question or prompt here
-
 ```
 
-### Linting the Wiki
+#### Linting the Wiki
 
 To perform a health check on your knowledge base, simply ask the query agent to lint the vault.
 
 ```bash
 npm run query Lint the wiki
-
 ```
+
+## License
+
+This project is licensed under the GPL-3.0 License - see [LICENSE](/LICENSE) for details.
