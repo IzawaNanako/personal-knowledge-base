@@ -6,13 +6,13 @@ This project is an AI-driven knowledge management system designed to operate dir
 
 The repository acts as a self-contained Obsidian vault with specific directories dedicated to the AI's workflow:
 
-* **`/raw`**: The staging area for immutable local source documents waiting to be processed.
-* **`/archive`**: The storage location for processed local documents and raw HTML/text downloaded autonomously from web searches.
-* **`/wiki`**: The compiled knowledge base. The AI extracts concepts and writes interconnected Markdown files here.
-* **`/wiki/index.md`**: The Master Index. A lightweight table of contents containing one-line summaries of every synthesized concept.
-* **`/output`**: The destination directory for synthesized answers when the user queries the knowledge base.
+- **`/raw`**: The staging area for immutable local source documents waiting to be processed.
+- **`/archive`**: The storage location for processed local documents and raw HTML/text downloaded autonomously from web searches.
+- **`/wiki`**: The compiled knowledge base. The AI extracts concepts and writes interconnected Markdown files here.
+- **`/wiki/index.md`**: The Master Index. A lightweight table of contents containing one-line summaries of every synthesized concept.
+- **`/output`**: The destination directory for synthesized answers when the user queries the knowledge base.
 
-*The included `.obsidian` configuration automatically hides operational files to ensure a clean, distraction-free reading experience focused strictly on your knowledge directories.*
+_The included `.obsidian` configuration automatically hides operational files to ensure a clean, distraction-free reading experience focused strictly on your knowledge directories._
 
 ## Core Operations
 
@@ -32,45 +32,51 @@ The system can perform health checks on the wiki, scanning for broken or orphan 
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/) (v16.x or higher)
-* [Obsidian](https://obsidian.md/)
-* A [Gemini API Key](https://aistudio.google.com/)
-* A [Tavily API Key](https://tavily.com/)
+- [Node.js](https://nodejs.org/) (v16.x or higher)
+- [Obsidian](https://obsidian.md/)
+- A [Gemini API Key](https://aistudio.google.com/)
+- A [Tavily API Key](https://tavily.com/)
 
 ### Installation
 
-1. **Clone the repository:**
+1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/IzawaNanako/personal-knowledge-base.git
-    cd personal-knowledge-base
-    ```
+   ```bash
+   git clone https://github.com/IzawaNanako/personal-knowledge-base.git
+   cd personal-knowledge-base
+   ```
 
-2. **Install Dependencies:**
+2. Install Dependencies:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
-3. **Configure Environment Variables:**
-Rename the `.env.example` file to `.env` and populate it with your API credentials:
+3. Build the project:
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   npm run build
+   ```
 
-    | Variable | Description | Required |
-    | --- | --- | --- |
-    | `GEMINI_API_KEY` | Your Google Gemini API Key. | Yes |
-    | `MODEL_NAME` | The specific Gemini model to use (e.g., `gemini-3.5-flash`). | Yes |
-    | `TAVILY_API_KEY` | Your Tavily API Key for autonomous web searches. | Yes |
+4. Configure Environment Variables:
+   Rename the `.env.example` file to `.env` and populate it with your API credentials:
 
-4. **Obsidian Integration:**
+   ```bash
+   cp .env.example .env
+   ```
 
-* Open the Obsidian application.
-* Select **"Open folder as vault"** and select the cloned repository folder.
-* Trust the workspace when prompted to ensure the pre-configured community plugins load correctly.
-* The custom Terminal plugin will be available directly within Obsidian to execute your AI commands.
+   | Variable         | Description                                                  | Required |
+   | ---------------- | ------------------------------------------------------------ | -------- |
+   | `GEMINI_API_KEY` | Your Google Gemini API Key.                                  | Yes      |
+   | `MODEL_NAME`     | The specific Gemini model to use (e.g., `gemini-3.5-flash`). | Yes      |
+   | `TAVILY_API_KEY` | Your Tavily API Key for autonomous web searches.             | Yes      |
+
+5. Obsidian Integration:
+
+- Open the Obsidian application.
+- Select **"Open folder as vault"** and select the cloned repository folder.
+- Trust the workspace when prompted to ensure the pre-configured community plugins load correctly.
+- The custom Terminal plugin will be available directly within Obsidian to execute your AI commands.
 
 ### Usage
 
