@@ -15,8 +15,11 @@
   "author": "Wither (https://github.com/IzawaNanako)",
   "type": "module",
   "scripts": {
-    "ingest": "tsx src/ingest.ts",
-    "query": "tsx src/query.ts"
+    "build": "tsc",
+    "ingest": "node dist/ingest.js",
+    "postingest": "dprint fmt \"wiki/*.md\" --no-gitignore",
+    "query": "node dist/query.js",
+    "postquery": "dprint fmt \"wiki/**/*.md\" \"output/**/*.md\" --no-gitignore"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
@@ -25,8 +28,10 @@
     "glob": "^13.0.6"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.6.0",
+    "dprint": "0.55.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   }
