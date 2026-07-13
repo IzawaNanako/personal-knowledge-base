@@ -59,11 +59,7 @@ The system can perform health checks on the wiki, scanning for broken or orphan 
    ```
 
 4. Configure Environment Variables:
-   Rename the `.env.example` file to `.env` and populate it with your API credentials:
-
-   ```bash
-   cp .env.example .env
-   ```
+   Rename the `.env.example` file to `.env` and populate it with your credentials:
 
    | Variable         | Description                                                  | Required |
    | ---------------- | ------------------------------------------------------------ | -------- |
