@@ -19,7 +19,9 @@
     "ingest": "node dist/ingest.js",
     "postingest": "dprint fmt \"wiki/*.md\" --no-gitignore",
     "query": "node dist/query.js",
-    "postquery": "dprint fmt \"wiki/**/*.md\" \"output/**/*.md\" --no-gitignore"
+    "postquery": "dprint fmt \"wiki/**/*.md\" \"output/**/*.md\" --no-gitignore",
+    "mentions": "node dist/mentions.js",
+    "postmentions": "dprint fmt \"wiki/**/*.md\""
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
