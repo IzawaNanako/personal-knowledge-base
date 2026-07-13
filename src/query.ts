@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import fse from 'fs-extra';
 import { glob } from 'glob';
-import { askGeminiForQuery, askGeminiForWikiOperations, checkNeedForSearch, getEmbedding, logOperation, searchTavily } from './lib.js';
+import { askGeminiForQuery, askGeminiForWikiOperations, buildContentWithTemplate, checkNeedForSearch, getEmbedding, logOperation, searchTavily } from './lib.js';
 
 const WIKI_DIR = path.join(process.cwd(), 'wiki');
 const OUTPUT_DIR = path.join(process.cwd(), 'output');
@@ -160,11 +160,15 @@ async function processQuery(question: string, hasSearched: boolean = false): Pro
 
 			if (operations && operations.length > 0) {
 				for (const op of operations) {
-					const targetPath = path.join(WIKI_DIR, op.filename);
+					const typeFolder = op.frontmatter?.type && op.frontmatter.type !== 'none' ? op.frontmatter.type.toLowerCase() : '';
+					const targetDir = path.join(WIKI_DIR, typeFolder);
+					await fse.ensureDir(targetDir);
+
+					const targetPath = path.join(targetDir, op.filename);
 					const fileExists = await fse.pathExists(targetPath);
 
 					const footerLinks = op.sources.map((s: string) => `\n- ${s.trim()}`).join('');
-					const sourceFooter = `\n\n## Sources${footerLinks}\n(Web Archive)`;
+					const sourceFooter = `\n\n## Web Sources${footerLinks}\n(Web Archive)`;
 
 					if (fileExists || op.action === 'update') {
 						const timestamp = new Date().toISOString();
@@ -172,7 +176,8 @@ async function processQuery(question: string, hasSearched: boolean = false): Pro
 						await fse.appendFile(targetPath, appendContent, 'utf8');
 						console.log(`   -> [WEB-APPENDED] ${op.filename}`);
 					} else {
-						await fs.writeFile(targetPath, op.content + sourceFooter, 'utf8');
+						const finalContent = await buildContentWithTemplate(op);
+						await fs.writeFile(targetPath, finalContent + sourceFooter, 'utf8');
 						console.log(`   -> [WEB-CREATED] ${op.filename}`);
 
 						const indexPath = path.join(WIKI_DIR, 'index.md');
