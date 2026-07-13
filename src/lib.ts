@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { type FunctionDeclaration, GoogleGenAI, type Schema, Type } from '@google/genai';
+import type { FunctionDeclaration, Schema } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import fse from 'fs-extra';
 import 'dotenv/config.js';
 
