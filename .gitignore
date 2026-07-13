@@ -3,11 +3,9 @@
 .obsidian/workspace-*
 .obsidian/graph.json
 .obsidian/plugins/terminal/data.json
-
 node_modules/
 dist/
 .env
-
 raw/
 output/
 wiki/
