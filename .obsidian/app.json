@@ -1,3 +1,21 @@
 {
-  "userIgnoreFilters": null
+  "alwaysUpdateLinks": true,
+  "userIgnoreFilters": [
+    ".git/",
+    "archive/",
+    "node_modules/",
+    "dist/",
+    "src/",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "biome.json",
+    "dprint.json",
+    ".env",
+    ".env.example",
+    ".gitignore"
+  ],
+  "attachmentFolderPath": "wiki/attachments",
+  "newFileLocation": "folder",
+  "newFileFolderPath": "raw"
 }

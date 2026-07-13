@@ -1,8 +1,5 @@
 .nav-folder:has([data-path="src"]),
-.nav-folder:has([data-path="raw"]),
 .nav-folder:has([data-path="archive"]),
-.nav-folder:has([data-path="prompts"]),
-.nav-folder:has([data-path="logs"]),
 .nav-folder:has([data-path="node_modules"]) {
     display: none !important;
 }
