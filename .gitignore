@@ -1,7 +1,6 @@
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/workspace-*
-.obsidian/graph.json
 .obsidian/plugins/terminal/data.json
 node_modules/
 dist/
@@ -10,3 +9,5 @@ raw/
 output/
 wiki/
 archive/
+logs/
+templates/*
