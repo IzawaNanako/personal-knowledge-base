@@ -98,12 +98,12 @@ Ask a question or request a synthesis. The AI will search the wiki, perform web 
 npm run query Your question or prompt here
 ```
 
-#### Linting the Wiki
+#### Auto-Linking Unlinked Mentions
 
-To perform a health check on your knowledge base, simply ask the query agent to lint the vault.
+Run the maintenance script to perform a vault-wide scan. It finds natural language mentions of your wiki topics and automatically converts them into strict Obsidian [[links]] to enrich your graph view.
 
 ```bash
-npm run query Lint the wiki
+npm run mentions
 ```
 
 ## License
