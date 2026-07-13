@@ -4,6 +4,19 @@ import { type FunctionDeclaration, GoogleGenAI, type Schema, Type } from '@googl
 import fse from 'fs-extra';
 import 'dotenv/config.js';
 
+interface WikiOperation {
+	filename: string;
+	frontmatter: {
+		type?: string;
+		tags?: string[];
+		aliases?: string[];
+	};
+	content: string;
+	action: string;
+	summary: string;
+	sources: string[];
+}
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const MODEL_NAME = process.env.MODEL_NAME;
 
@@ -13,40 +26,121 @@ if (!MODEL_NAME) {
 
 const SYSTEM_PROMPT_PATH = path.join(process.cwd(), 'prompts', 'system.md');
 const LOG_PATH = path.join(process.cwd(), 'logs', 'log.md');
+const TEMPLATES_DIR = path.join(process.cwd(), 'templates');
 
-const wikiOperationSchema: Schema = {
-	type: Type.ARRAY,
-	description: 'A list of wiki files to create or update. Prefer creating one comprehensive markdown file per broad topic. Do not fragment related concepts into multiple small files. Group them together under markdown headers.',
-	items: {
-		type: Type.OBJECT,
-		properties: {
-			filename: {
-				type: Type.STRING,
-				description: 'The kebab-case.md filename.',
-			},
-			content: {
-				type: Type.STRING,
-				description: 'The markdown content.',
-			},
-			action: {
-				type: Type.STRING,
-				description: "'create' if new, 'update' if appending.",
-			},
-			summary: {
-				type: Type.STRING,
-				description: 'A one-line summary of the file for the Master Index.',
-			},
-			sources: {
-				type: Type.ARRAY,
-				description: 'List of [[archive-links]] used for this specific content.',
-				items: {
+export async function getAvailableTemplates(): Promise<string[]> {
+	try {
+		const files = await fs.readdir(TEMPLATES_DIR);
+		return files.filter(f => f.endsWith('.md')).map(f => f.replace('.md', ''));
+	} catch {
+		return [];
+	}
+}
+
+export function buildYamlFrontmatter(frontmatter: { type?: string; tags?: string[]; aliases?: string[] }): string {
+	if (!frontmatter) {
+		return '';
+	}
+
+	let yaml = '---\n';
+	if (frontmatter.type) {
+		yaml += `type: ${frontmatter.type}\n`;
+	}
+
+	if (frontmatter.aliases && frontmatter.aliases.length > 0) {
+		yaml += `aliases:\n${frontmatter.aliases.map(a => `  - ${a}`).join('\n')}\n`;
+	}
+
+	if (frontmatter.tags && frontmatter.tags.length > 0) {
+		yaml += `tags:\n${frontmatter.tags.map(t => `  - ${t}`).join('\n')}\n`;
+	}
+
+	yaml += '---\n\n';
+	return yaml;
+}
+
+export async function buildContentWithTemplate(op: WikiOperation): Promise<string> {
+	const type = op.frontmatter?.type?.toLowerCase();
+	if (!type) {
+		return buildYamlFrontmatter(op.frontmatter) + op.content;
+	}
+
+	const templatePath = path.join(TEMPLATES_DIR, `${type}.md`);
+	const templateExists = await fse.pathExists(templatePath);
+
+	if (!templateExists) {
+		return buildYamlFrontmatter(op.frontmatter) + op.content;
+	}
+
+	let template = await fs.readFile(templatePath, 'utf8');
+
+	const formatYamlArray = (arr?: string[]) => arr && arr.length > 0 ? `\n${arr.map((i: string) => `  - ${i}`).join('\n')}` : ' []';
+
+	const title = op.filename.replace('.md', '').split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+	template = template.replace(/\{\{title\}\}/g, title);
+	template = template.replace(/\{\{content\}\}/g, op.content);
+	template = template.replace(/\{\{aliases\}\}/g, formatYamlArray(op.frontmatter.aliases));
+	template = template.replace(/\{\{tags\}\}/g, formatYamlArray(op.frontmatter.tags));
+
+	return template;
+}
+
+async function getWikiOperationSchema(): Promise<Schema> {
+	const templates = await getAvailableTemplates();
+	const allowedTypes = templates.length > 0 ? [...templates, 'none'] : ['none'];
+
+	return {
+		type: Type.ARRAY,
+		description: 'A list of wiki files to create or update.',
+		items: {
+			type: Type.OBJECT,
+			properties: {
+				filename: {
 					type: Type.STRING,
 				},
+				frontmatter: {
+					type: Type.OBJECT,
+					properties: {
+						type: {
+							type: Type.STRING,
+							description: `The category of the note. Must be one of the available templates or 'none'.`,
+							enum: allowedTypes,
+						},
+						tags: {
+							type: Type.ARRAY,
+							items: {
+								type: Type.STRING,
+							},
+						},
+						aliases: {
+							type: Type.ARRAY,
+							items: {
+								type: Type.STRING,
+							},
+						},
+					},
+				},
+				content: {
+					type: Type.STRING,
+				},
+				action: {
+					type: Type.STRING,
+				},
+				summary: {
+					type: Type.STRING,
+				},
+				sources: {
+					type: Type.ARRAY,
+					items: {
+						type: Type.STRING,
+					},
+				},
 			},
+			required: ['filename', 'frontmatter', 'content', 'action', 'summary', 'sources'],
 		},
-		required: ['filename', 'content', 'action', 'summary', 'sources'],
-	},
-};
+	};
+}
 
 async function getSystemInstruction(): Promise<string> {
 	if (!await fse.pathExists(SYSTEM_PROMPT_PATH)) {
@@ -136,8 +230,9 @@ export async function searchTavily(query: string): Promise<{ url: string; title:
 	}));
 }
 
-export async function askGeminiForWikiOperations(prompt: string): Promise<{ filename: string; content: string; action: string; summary: string; sources: string[] }[]> {
+export async function askGeminiForWikiOperations(prompt: string): Promise<{ filename: string; frontmatter: { type?: string; tags?: string[]; aliases?: string[] }; content: string; action: string; summary: string; sources: string[] }[]> {
 	const systemInstruction = await getSystemInstruction();
+	const dynamicSchema = await getWikiOperationSchema();
 
 	try {
 		const response = await ai.models.generateContent({
@@ -147,7 +242,7 @@ export async function askGeminiForWikiOperations(prompt: string): Promise<{ file
 				systemInstruction: systemInstruction,
 				temperature: 0.2,
 				responseMimeType: 'application/json',
-				responseSchema: wikiOperationSchema,
+				responseSchema: dynamicSchema,
 			},
 		});
 
