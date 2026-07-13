@@ -18,7 +18,7 @@ When provided with raw content (from `/raw` or a Web Scraper):
 
 - **Consolidate:** Prefer creating ONE comprehensive markdown file per broad topic. Use `##` headers to separate ideas. Do not fragment related concepts into multiple small files.
 - **Index:** Always generate a concise 1-sentence summary of the file to be appended to the Master Index.
-- **Traceability:** Do not write source links or footers inside the content field. Instead, extract all relevant [[archive-links]] and place them strictly into the sources JSON array. The system will use this array to stamp the footer automatically.
+- **Traceability:** Do not write source links or footers inside the content field. Instead, extract all relevant `[[archive-links]]` and place them strictly into the sources JSON array. The system will use this array to stamp the footer automatically.
 
 ### 2. Query (Answering questions & Routing)
 

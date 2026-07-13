@@ -100,7 +100,7 @@ npm run query Your question or prompt here
 
 #### Auto-Linking Unlinked Mentions
 
-Run the maintenance script to perform a vault-wide scan. It finds natural language mentions of your wiki topics and automatically converts them into strict Obsidian [[links]] to enrich your graph view.
+Run the maintenance script to perform a vault-wide scan. It finds natural language mentions of your wiki topics and automatically converts them into strict Obsidian `[[links]]` to enrich your graph view.
 
 ```bash
 npm run mentions
@@ -108,4 +108,4 @@ npm run mentions
 
 ## License
 
-This project is licensed under the GPL-3.0 License - see [LICENSE](/LICENSE) for details.
+This project is licensed under the GPL-3.0 License - see [LICENSE](https://github.com/IzawaNanako/personal-knowledge-base/blob/main/LICENSE) for details.
