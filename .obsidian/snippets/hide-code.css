@@ -1,5 +1,6 @@
 .nav-folder:has([data-path="src"]),
 .nav-folder:has([data-path="archive"]),
-.nav-folder:has([data-path="node_modules"]) {
+.nav-folder:has([data-path="node_modules"]),
+.nav-folder:has([data-path="dist"]) {
     display: none !important;
 }
