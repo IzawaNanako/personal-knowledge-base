@@ -32,7 +32,7 @@ The system can perform health checks on the wiki, scanning for broken or orphan 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v16.x or higher)
+- [Node.js](https://nodejs.org/) (Tested on v26.1.0)
 - [Obsidian](https://obsidian.md/)
 - A [Gemini API Key](https://aistudio.google.com/)
 - A [Tavily API Key](https://tavily.com/)
@@ -41,7 +41,7 @@ The system can perform health checks on the wiki, scanning for broken or orphan 
 
 1. Clone the repository:
 
-   ```bash
+   ```bash  
    git clone https://github.com/IzawaNanako/personal-knowledge-base.git
    cd personal-knowledge-base
    ```
