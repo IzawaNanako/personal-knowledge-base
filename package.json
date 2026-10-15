@@ -16,6 +16,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "devcheck": "biome check && dprint check",
+    "devfix": "biome check --write && dprint fmt",
     "ingest": "node dist/ingest.js",
     "postingest": "dprint fmt \"wiki/*.md\" --no-gitignore",
     "query": "node dist/query.js",
